@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Next Stage</title>
+
+<style>
+body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background:#f5f6fa;
+}
+header{
+    background:#e30613;
+    color:white;
+    padding:20px;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+}
+.container{
+    padding:20px;
+}
+.card{
+    background:white;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
+    margin-bottom:15px;
+}
+.card h2{
+    margin:0 0 10px 0;
+}
+.big{
+    font-size:28px;
+    font-weight:bold;
+}
+.red{
+    color:#e30613;
+}
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    margin-top:8px;
+    font-size:16px;
+    cursor:pointer;
+}
+.green-btn{
+    background:#28a745;
+    color:white;
+}
+.red-btn{
+    background:#e30613;
+    color:white;
+}
+.gray-btn{
+    background:#444;
+    color:white;
+}
+input{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    border-radius:8px;
+    border:1px solid #ddd;
+}
+.history{
+    max-height:200px;
+    overflow-y:auto;
+    font-size:14px;
+}
+.item{
+    border-bottom:1px solid #eee;
+    padding:5px 0;
+}
+</style>
+</head>
+
+<body>
+
+<header>Next Stage</header>
+
+<div class="container">
+
+<div class="card">
+<h2>Banca Atual</h2>
+<div class="big red" id="bank">R$ 0.00</div>
+</div>
+
+<div class="card">
+<h2>Stake Atual (1%)</h2>
+<div class="big" id="stake">R$ 0.00</div>
+</div>
+
+<div class="card">
+<h2>Registrar Entrada</h2>
+<label>Odd</label>
+<input type="number" id="odd" step="0.01">
+
+<button class="green-btn" onclick="green()">Green</button>
+<button class="red-btn" onclick="red()">Red</button>
+</div>
+
+<div class="card">
+<h2>Depósito</h2>
+<input type="number" id="depositValue">
+<button class="gray-btn" onclick="deposit()">Adicionar</button>
+</div>
+
+<div class="card">
+<h2>Retirada</h2>
+<input type="number" id="withdrawValue">
+<button class="gray-btn" onclick="withdraw()">Retirar</button>
+</div>
+
+<div class="card">
+<h2>Histórico</h2>
+<div class="history" id="history"></div>
+</div>
+
+</div>
+
+<script>
+let percent = 1;
+let data = JSON.parse(localStorage.getItem("nextStageData")) || {
+    bank: 0,
+    history: []
+};
+
+function save(){
+    localStorage.setItem("nextStageData", JSON.stringify(data));
+}
+
+function update(){
+    let stake = data.bank * (percent / 100);
+    document.getElementById("bank").innerText = "R$ " + data.bank.toFixed(2);
+    document.getElementById("stake").innerText = "R$ " + stake.toFixed(2);
+
+    let historyDiv = document.getElementById("history");
+    historyDiv.innerHTML = "";
+    data.history.slice().reverse().forEach(item=>{
+        historyDiv.innerHTML += `<div class="item">${item}</div>`;
+    });
+}
+
+function green(){
+    let odd = parseFloat(document.getElementById("odd").value);
+    if(!odd || data.bank <= 0) return;
+
+    let stake = data.bank * (percent / 100);
+    let profit = stake * (odd - 1);
+    data.bank += profit;
+    data.history.push("Green | Odd " + odd + " | +" + profit.toFixed(2));
+    save();
+    update();
+}
+
+function red(){
+    if(data.bank <= 0) return;
+    let stake = data.bank * (percent / 100);
+    data.bank -= stake;
+    data.history.push("Red | -" + stake.toFixed(2));
+    save();
+    update();
+}
+
+function deposit(){
+    let value = parseFloat(document.getElementById("depositValue").value);
+    if(!value) return;
+    data.bank += value;
+    data.history.push("Depósito | +" + value.toFixed(2));
+    save();
+    update();
+}
+
+function withdraw(){
+    let value = parseFloat(document.getElementById("withdrawValue").value);
+    if(!value || value > data.bank) return;
+    data.bank -= value;
+    data.history.push("Retirada | -" + value.toFixed(2));
+    save();
+    update();
+}
+
+update();
+</script>
+
+</body>
+</html>
